@@ -1,69 +1,137 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { WORDS_DATA, WordItem } from '@/data/words';
+import { speak } from '@/utils/speech';
 
 export default function Home() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedSyllables, setSelectedSyllables] = useState<string[]>([]);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const currentItem: WordItem = WORDS_DATA[currentIndex];
+
+  useEffect(() => {
+    // Apresenta o item ao carregar a palavra
+    speak(`Esta palavra é: ${currentItem.word}. Toque nos botões para formar a palavra.`);
+    setSelectedSyllables([]);
+    setIsSuccess(false);
+  }, [currentIndex, currentItem]);
+
+  const handleSelectSyllable = (syl: string) => {
+    speak(syl);
+    const newSelected = [...selectedSyllables, syl];
+    setSelectedSyllables(newSelected);
+
+    // Verifica se completou a palavra
+    const expected = currentItem.syllables.slice(0, newSelected.length);
+    const isCorrectSoFar = newSelected.every((val, idx) => val === expected[idx]);
+
+    if (!isCorrectSoFar) {
+      setTimeout(() => {
+        speak('Tente de novo! Vamos limpar.');
+        setSelectedSyllables([]);
+      }, 700);
+      return;
+    }
+
+    if (newSelected.length === currentItem.syllables.length) {
+      setIsSuccess(true);
+      setTimeout(() => {
+        speak(`Muito bem! Acertou: ${currentItem.word}!`, 0.9);
+      }, 400);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentIndex < WORDS_DATA.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
+    } else {
+      speak('Parabéns! Concluiu todas as palavras!');
+      setCurrentIndex(0);
+    }
+  };
+
+  const handleReset = () => {
+    setSelectedSyllables([]);
+    speak('Recomeçando a palavra.');
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen bg-slate-100 flex flex-col items-center justify-between p-4 sm:p-8 select-none">
+      {/* Cabeçalho */}
+      <header className="w-full max-w-md flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+        <span className="text-xl font-bold text-slate-700">
+          Palavra {currentIndex + 1} de {WORDS_DATA.length}
+        </span>
+        <button
+          onClick={() => speak(`Esta palavra é: ${currentItem.word}`)}
+          className="bg-amber-400 hover:bg-amber-500 text-amber-950 px-4 py-2 rounded-xl text-lg font-bold flex items-center gap-2 shadow transition active:scale-95"
+          aria-label="Ouvir palavra"
+        >
+          🔊 Ouvir
+        </button>
+      </header>
+
+      {/* Cartão Central */}
+      <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-md border border-slate-200 flex flex-col items-center my-auto">
+        {/* Ícone Grande */}
+        <div className="text-8xl my-2 animate-pulse">{currentItem.icon}</div>
+
+        {/* Espaços das Sílabas */}
+        <div className="flex gap-2 my-6 flex-wrap justify-center">
+          {currentItem.syllables.map((syl, idx) => {
+            const filled = selectedSyllables[idx];
+            return (
+              <div
+                key={idx}
+                className={`w-20 h-20 sm:w-24 sm:h-24 border-4 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl font-black ${
+                  filled
+                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                    : 'border-dashed border-slate-300 bg-slate-50 text-transparent'
+                }`}
+              >
+                {filled || '_'}
+              </div>
+            );
+          })}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+        {/* Opções de Sílabas */}
+        {!isSuccess ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full mt-2">
+            {currentItem.options.map((option, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSelectSyllable(option)}
+                className="h-20 bg-blue-600 hover:bg-blue-700 text-white font-black text-3xl rounded-2xl shadow-md border-b-4 border-blue-800 active:border-b-0 active:translate-y-1 transition"
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="w-full text-center mt-4">
+            <p className="text-emerald-600 font-black text-2xl mb-4">🌟 PARABÉNS! 🌟</p>
+            <button
+              onClick={handleNext}
+              className="w-full h-20 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-2xl rounded-2xl shadow-lg border-b-4 border-emerald-700 active:border-b-0 active:translate-y-1 transition"
+            >
+              PRÓXIMA ➡️
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Controlos Inferiores */}
+      <footer className="w-full max-w-md flex justify-between gap-4">
+        <button
+          onClick={handleReset}
+          className="flex-1 py-4 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-2xl text-lg transition active:scale-95"
+        >
+          🔄 Limpar
+        </button>
+      </footer>
+    </main>
   );
 }
