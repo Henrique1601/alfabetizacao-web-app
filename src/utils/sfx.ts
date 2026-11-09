@@ -83,3 +83,27 @@ export function playSuccessSound() {
     osc.stop(ctx.currentTime + idx * 0.08 + 0.3);
   });
 }
+
+export function playAchievementSound() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  // Fanfarra estilo Minecraft "Challenge Complete" (G4, C5, E5, G5, C6)
+  const notes = [392.00, 523.25, 659.25, 783.99, 1046.50];
+  notes.forEach((freq, idx) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.12);
+
+    gain.gain.setValueAtTime(0.22, ctx.currentTime + idx * 0.12);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + idx * 0.12 + 0.45);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(ctx.currentTime + idx * 0.12);
+    osc.stop(ctx.currentTime + idx * 0.12 + 0.45);
+  });
+}

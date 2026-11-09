@@ -20,10 +20,16 @@ Registro das decisões arquiteturais e escolhas técnicas do projeto (ADRs).
 - **Status:** Aceito
 - **Data:** 2026-11-09
 - **Contexto:** Necessidade de feedback tátil e auditivo instantâneo sem depender de arquivos `.mp3`/`.wav` externos lentos ou bloqueados por CORS.
-- **Decisão:** Implementação de osciladores sintetizados proceduralmente em `src/utils/sfx.ts` (Click, Erro e Acorde Maior de Vitória).
+- **Decisão:** Implementação de osciladores sintetizados proceduralmente em `src/utils/sfx.ts` (Click, Erro, Vitória e Fanfarra de Conquista).
 
 ## [ADR-004] Gamificação & Progresso Persistente (RPG / Crafting)
 - **Status:** Aceito
 - **Data:** 2026-11-09
 - **Contexto:** Aumentar retenção e engajamento da criança através de feedback lúdico de evolução.
 - **Decisão:** Implementação de barra de XP, níveis incrementais (LVL) e coleta de Esmeraldas persistidas no `localStorage`.
+
+## [ADR-005] Sistema de Conquistas & Desafios (Advancements)
+- **Status:** Aceito
+- **Data:** 2026-11-09
+- **Contexto:** Estimular a exploração de categorias variadas e metas de longo prazo da criança.
+- **Decisão:** Criação de `src/data/achievements.ts` com regras declarativas, popup toast animado no estilo Minecraft Advancements, fanfarra sonora e modal com galeria de troféus desbloqueáveis.

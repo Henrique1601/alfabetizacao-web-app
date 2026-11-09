@@ -3,8 +3,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 import { WORDS_DATA, WordItem, WordCategory } from '@/data/words';
+import { ACHIEVEMENTS_LIST, Achievement, GameStats } from '@/data/achievements';
 import { speak } from '@/utils/speech';
-import { playClickSound, playErrorSound, playSuccessSound } from '@/utils/sfx';
+import { playClickSound, playErrorSound, playSuccessSound, playAchievementSound } from '@/utils/sfx';
 
 const CATEGORIES: { label: string; value: WordCategory; icon: string }[] = [
   { label: 'Todos', value: 'TODOS', icon: '🌟' },
@@ -24,24 +25,47 @@ export default function Home() {
   // Gamificação (XP, Esmeraldas e Nível persistidos)
   const [xp, setXp] = useState(0);
   const [emeralds, setEmeralds] = useState(0);
+  const [wordsCompleted, setWordsCompleted] = useState(0);
+  const [completedCategories, setCompletedCategories] = useState<Record<string, number>>({});
+  const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
+
+  // Notificação de Conquista Recém-Desbloqueada
+  const [latestBadge, setLatestBadge] = useState<Achievement | null>(null);
+  const [showBadgesModal, setShowBadgesModal] = useState(false);
 
   // Carregar dados salvos
   useEffect(() => {
     try {
       const savedXp = localStorage.getItem('craft_xp');
       const savedEmeralds = localStorage.getItem('craft_emeralds');
+      const savedWords = localStorage.getItem('craft_words_completed');
+      const savedCats = localStorage.getItem('craft_categories_completed');
+      const savedBadges = localStorage.getItem('craft_unlocked_badges');
+
       if (savedXp) setXp(parseInt(savedXp, 10));
       if (savedEmeralds) setEmeralds(parseInt(savedEmeralds, 10));
+      if (savedWords) setWordsCompleted(parseInt(savedWords, 10));
+      if (savedCats) setCompletedCategories(JSON.parse(savedCats));
+      if (savedBadges) setUnlockedAchievements(JSON.parse(savedBadges));
     } catch {
       // Ignora erro se localStorage restrito
     }
   }, []);
 
   // Salvar dados
-  const saveProgress = (newXp: number, newEmeralds: number) => {
+  const saveProgress = (
+    newXp: number,
+    newEmeralds: number,
+    newWords: number,
+    newCats: Record<string, number>,
+    newBadges: string[]
+  ) => {
     try {
       localStorage.setItem('craft_xp', newXp.toString());
       localStorage.setItem('craft_emeralds', newEmeralds.toString());
+      localStorage.setItem('craft_words_completed', newWords.toString());
+      localStorage.setItem('craft_categories_completed', JSON.stringify(newCats));
+      localStorage.setItem('craft_unlocked_badges', JSON.stringify(newBadges));
     } catch {
       // Ignora erro
     }
@@ -104,6 +128,32 @@ export default function Home() {
     })();
   };
 
+  // Checagem de Conquistas
+  const checkAchievements = (stats: GameStats, currentBadges: string[]): string[] => {
+    const updated = [...currentBadges];
+    let newlyUnlocked: Achievement | null = null;
+
+    ACHIEVEMENTS_LIST.forEach((ach) => {
+      if (!updated.includes(ach.id) && ach.condition(stats)) {
+        updated.push(ach.id);
+        if (!newlyUnlocked) {
+          newlyUnlocked = ach;
+        }
+      }
+    });
+
+    if (newlyUnlocked) {
+      setLatestBadge(newlyUnlocked);
+      playAchievementSound();
+      speak(`Conquista desbloqueada: ${(newlyUnlocked as Achievement).title}!`);
+      setTimeout(() => {
+        setLatestBadge(null);
+      }, 5000);
+    }
+
+    return updated;
+  };
+
   const handleSelectSyllable = (syl: string) => {
     playClickSound();
     speak(syl);
@@ -131,12 +181,31 @@ export default function Home() {
       playSuccessSound();
       triggerConfetti();
 
-      // Ganho de XP e Esmeralda (+25 XP e +1 Esmeralda)
+      // Atualização de Estatísticas
       const nextXp = xp + 25;
       const nextEmeralds = emeralds + 1;
+      const nextWords = wordsCompleted + 1;
+      const nextCats = {
+        ...completedCategories,
+        [currentItem.category]: (completedCategories[currentItem.category] || 0) + 1
+      };
+      const nextLevel = Math.floor(nextXp / 100) + 1;
+
+      const currentStats: GameStats = {
+        wordsCompleted: nextWords,
+        emeralds: nextEmeralds,
+        level: nextLevel,
+        completedCategories: nextCats
+      };
+
+      const nextBadges = checkAchievements(currentStats, unlockedAchievements);
+
       setXp(nextXp);
       setEmeralds(nextEmeralds);
-      saveProgress(nextXp, nextEmeralds);
+      setWordsCompleted(nextWords);
+      setCompletedCategories(nextCats);
+      setUnlockedAchievements(nextBadges);
+      saveProgress(nextXp, nextEmeralds, nextWords, nextCats, nextBadges);
 
       setTimeout(() => {
         speak(`Muito bem! Acertou: ${currentItem.word}! Você ganhou uma esmeralda!`, 0.9);
@@ -162,8 +231,24 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-sky-100 via-amber-50 to-emerald-50 flex flex-col items-center justify-between p-3 sm:p-6 select-none">
-      {/* Barra de Status Gamificada (Nível, XP e Esmeraldas) */}
+    <main className="min-h-screen bg-gradient-to-b from-sky-100 via-amber-50 to-emerald-50 flex flex-col items-center justify-between p-3 sm:p-6 select-none relative overflow-x-hidden">
+      {/* Banner Flutuante de Conquista Desbloqueada (Estilo Minecraft Advancements) */}
+      {latestBadge && (
+        <div className="fixed top-4 z-50 animate-pop max-w-sm w-11/12 bg-slate-900 border-2 border-amber-400 text-white p-3 rounded-2xl shadow-2xl flex items-center gap-3">
+          <div className="text-4xl bg-slate-800 p-2 rounded-xl border border-amber-400/50">
+            {latestBadge.icon}
+          </div>
+          <div className="flex-1">
+            <span className="text-amber-400 text-xs font-black tracking-widest uppercase">
+              Desafio Concluído! 🏆
+            </span>
+            <h4 className="font-black text-base text-white">{latestBadge.title}</h4>
+            <p className="text-xs text-slate-300">{latestBadge.description}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Barra de Status Gamificada (Nível, XP, Esmeraldas e Botão de Conquistas) */}
       <section className="w-full max-w-md bg-slate-900 text-white p-3 rounded-2xl shadow-lg border-2 border-slate-700 flex flex-col gap-2">
         <div className="flex justify-between items-center text-sm font-bold">
           <div className="flex items-center gap-2">
@@ -172,9 +257,21 @@ export default function Home() {
             </span>
             <span className="text-emerald-400 font-mono tracking-wide">{currentLevelXp}/100 XP</span>
           </div>
-          <div className="flex items-center gap-1 bg-slate-800 px-3 py-1 rounded-xl border border-emerald-600/50">
-            <span className="text-lg">💎</span>
-            <span className="text-emerald-300 font-black">{emeralds} Esmeraldas</span>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                playClickSound();
+                setShowBadgesModal(true);
+              }}
+              className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/50 px-2 py-1 rounded-xl text-xs font-black flex items-center gap-1 transition active:scale-95 cursor-pointer"
+            >
+              🏆 {unlockedAchievements.length}/{ACHIEVEMENTS_LIST.length}
+            </button>
+            <div className="flex items-center gap-1 bg-slate-800 px-2.5 py-1 rounded-xl border border-emerald-600/50">
+              <span className="text-base">💎</span>
+              <span className="text-emerald-300 font-black text-xs sm:text-sm">{emeralds}</span>
+            </div>
           </div>
         </div>
 
@@ -308,6 +405,78 @@ export default function Home() {
           💡 Dica
         </button>
       </footer>
+
+      {/* Modal de Conquistas & Desafios */}
+      {showBadgesModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 animate-pop">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-4 border-slate-300 flex flex-col max-h-[85vh]">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-3xl">🏆</span>
+                <h3 className="text-xl font-black text-slate-800">Suas Conquistas</h3>
+              </div>
+              <button
+                onClick={() => {
+                  playClickSound();
+                  setShowBadgesModal(false);
+                }}
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black flex items-center justify-center transition active:scale-95 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 mb-4 font-bold">
+              Complete palavras e suba de nível para desbloquear todos os troféus!
+            </p>
+
+            <div className="flex flex-col gap-3 overflow-y-auto pr-1">
+              {ACHIEVEMENTS_LIST.map((ach) => {
+                const isUnlocked = unlockedAchievements.includes(ach.id);
+                return (
+                  <div
+                    key={ach.id}
+                    className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition ${
+                      isUnlocked
+                        ? 'bg-amber-50/70 border-amber-300 text-amber-950'
+                        : 'bg-slate-50 border-slate-200 text-slate-400 opacity-60'
+                    }`}
+                  >
+                    <div
+                      className={`text-3xl p-2 rounded-xl flex items-center justify-center ${
+                        isUnlocked ? 'bg-amber-200' : 'bg-slate-200 grayscale'
+                      }`}
+                    >
+                      {ach.icon}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-black text-sm">{ach.title}</h4>
+                        {isUnlocked && (
+                          <span className="text-[10px] bg-emerald-500 text-white font-extrabold px-1.5 py-0.5 rounded-full">
+                            CONCLUÍDO
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500">{ach.description}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => {
+                playClickSound();
+                setShowBadgesModal(false);
+              }}
+              className="mt-5 w-full py-3 bg-amber-400 hover:bg-amber-500 text-amber-950 font-black rounded-2xl text-base transition border-b-4 border-amber-600 active:border-b-0 active:translate-y-1 cursor-pointer"
+            >
+              CONTINUAR JOGANDO 🎮
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
