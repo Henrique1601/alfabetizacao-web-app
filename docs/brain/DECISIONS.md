@@ -33,3 +33,9 @@ Registro das decisões arquiteturais e escolhas técnicas do projeto (ADRs).
 - **Data:** 2026-11-09
 - **Contexto:** Estimular a exploração de categorias variadas e metas de longo prazo da criança.
 - **Decisão:** Criação de `src/data/achievements.ts` com regras declarativas, popup toast animado no estilo Minecraft Advancements, fanfarra sonora e modal com galeria de troféus desbloqueáveis.
+
+## [ADR-006] Progressive Web App (PWA) & Capacidade Offline
+- **Status:** Aceito
+- **Data:** 2026-11-09
+- **Contexto:** Permitir que o jogo seja instalado em dispositivos móveis (tablets e smartphones de crianças) sem necessidade de loja de aplicativos e com suporte a funcionamento sem conexão com a internet.
+- **Decisão:** Criação do manifesto web (`public/manifest.json`), ícones de design voxel nos formatos 192x192 e 512x512, service worker de cache offline (`public/sw.js`) e metadados no App Router (`src/app/layout.tsx`).

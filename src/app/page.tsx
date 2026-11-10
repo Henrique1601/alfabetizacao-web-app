@@ -33,8 +33,14 @@ export default function Home() {
   const [latestBadge, setLatestBadge] = useState<Achievement | null>(null);
   const [showBadgesModal, setShowBadgesModal] = useState(false);
 
-  // Carregar dados salvos
+  // Carregar dados salvos e registrar Service Worker para PWA
   useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+      navigator.serviceWorker.register('/sw.js').catch((err) => {
+        console.warn('Falha ao registrar Service Worker do PWA:', err);
+      });
+    }
+
     try {
       const savedXp = localStorage.getItem('craft_xp');
       const savedEmeralds = localStorage.getItem('craft_emeralds');
