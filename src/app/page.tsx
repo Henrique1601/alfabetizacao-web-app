@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 import { WORDS_DATA, WordItem, WordCategory, DifficultyLevel } from '@/data/words';
 import { ACHIEVEMENTS_LIST, Achievement, GameStats } from '@/data/achievements';
+import SpellingMinigame from '@/components/SpellingMinigame';
 import { speak, updateSpeechSettings, SpeechSettings } from '@/utils/speech';
 import { 
   playClickSound, 
@@ -62,6 +63,7 @@ export default function Home() {
   // Modais e Toasts
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showBadgesModal, setShowBadgesModal] = useState(false);
+  const [showSpellingModal, setShowSpellingModal] = useState(false);
   const [latestBadge, setLatestBadge] = useState<Achievement | null>(null);
 
   // Carregar dados e registrar Service Worker para PWA
@@ -344,6 +346,17 @@ export default function Home() {
     }
   };
 
+  const handleSpellingComplete = (bonusXp: number, bonusEmeralds: number) => {
+    const nextXp = xp + bonusXp;
+    const nextEmeralds = emeralds + bonusEmeralds;
+    setXp(nextXp);
+    setEmeralds(nextEmeralds);
+    try {
+      localStorage.setItem('craft_xp', nextXp.toString());
+      localStorage.setItem('craft_emeralds', nextEmeralds.toString());
+    } catch {}
+  };
+
   const handleNext = () => {
     playClickSound();
     if (currentIndex < filteredWords.length - 1) {
@@ -561,10 +574,10 @@ export default function Home() {
       </div>
 
       {/* Controlos Inferiores */}
-      <footer className="w-full max-w-md flex justify-between gap-3 mt-2">
+      <footer className="w-full max-w-md flex justify-between gap-2.5 mt-2">
         <button
           onClick={handleReset}
-          className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-700 font-black rounded-2xl text-base transition active:scale-95 border-b-4 border-slate-300 cursor-pointer"
+          className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-700 font-black rounded-2xl text-sm sm:text-base transition active:scale-95 border-b-4 border-slate-300 cursor-pointer"
         >
           🔄 Limpar
         </button>
@@ -573,9 +586,19 @@ export default function Home() {
             playClickSound();
             speak(currentItem.word);
           }}
-          className="flex-1 py-3 bg-amber-200 hover:bg-amber-300 active:bg-amber-400 text-amber-900 font-black rounded-2xl text-base transition active:scale-95 border-b-4 border-amber-400 cursor-pointer"
+          className="flex-1 py-3 bg-amber-200 hover:bg-amber-300 active:bg-amber-400 text-amber-900 font-black rounded-2xl text-sm sm:text-base transition active:scale-95 border-b-4 border-amber-400 cursor-pointer"
         >
           💡 Dica
+        </button>
+        <button
+          onClick={() => {
+            playClickSound();
+            setShowSpellingModal(true);
+          }}
+          className="flex-1 py-3 bg-purple-500 hover:bg-purple-600 active:bg-purple-700 text-white font-black rounded-2xl text-sm sm:text-base transition active:scale-95 border-b-4 border-purple-800 cursor-pointer shadow-md"
+          title="Minigame Soletração"
+        >
+          🔤 Soletre!
         </button>
       </footer>
 
@@ -755,6 +778,15 @@ export default function Home() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Minigame de Soletração Letra por Letra */}
+      {showSpellingModal && (
+        <SpellingMinigame
+          wordItem={currentItem}
+          onComplete={handleSpellingComplete}
+          onClose={() => setShowSpellingModal(false)}
+        />
       )}
     </main>
   );

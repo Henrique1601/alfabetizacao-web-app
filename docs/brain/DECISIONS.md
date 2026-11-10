@@ -44,8 +44,10 @@ Registro das decisões arquiteturais e escolhas técnicas do projeto (ADRs).
 - **Status:** Aceito
 - **Data:** 2026-11-09
 - **Contexto:** Dar controle aos pais/educadores sobre som/velocidade da voz e oferecer curva de aprendizado adaptativa para crianças de diferentes idades.
-- **Decisão:** 
-  1. Painel modal de Configurações com ajuste de voz (velocidade 0.7x, 0.9x, 1.1x), mudo independente de SFX e Narrador, e reset seguro de progresso.
-  2. Níveis de Dificuldade dinâmicos (`Fácil`, `Médio`, `Difícil`) adaptando o número e a complexidade dos distratores de sílabas com multiplicadores de XP/Esmeraldas.
-  3. Sistema de Combo (Streak) com multiplicador visual de chamas.
-  4. Expansão para 48 palavras e 9 categorias temáticas.
+- **Decisão:** Painel modal de Configurações, 3 Níveis de Dificuldade dinâmicos, Combos (Streak) e 48 palavras em 9 categorias.
+
+## [ADR-008] Minigame Bônus de Soletração Fonética ("Letra por Letra")
+- **Status:** Aceito
+- **Data:** 2026-11-09
+- **Contexto:** Fortalecer a consciência fonológica da criança associando cada letra individualmente antes da formação silábica completa.
+- **Decisão:** Criação do componente isolado `src/components/SpellingMinigame.tsx` com slots de letras, embaralhamento procedural com distratores, validação tátil, feedback por voz de cada letra e recompensas de XP (+35 XP) e Esmeraldas.
