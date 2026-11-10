@@ -1,12 +1,21 @@
 /**
  * Gerador de efeitos sonoros procedural via Web Audio API
- * Sem dependências externas ou arquivos de áudio pesados.
+ * Com controle de volume e mudo integrado
  */
 
 let audioCtx: AudioContext | null = null;
+let soundEnabled = true;
+let soundVolume = 0.8;
+
+export function updateSoundSettings(enabled: boolean, volume: number) {
+  soundEnabled = enabled;
+  soundVolume = Math.max(0, Math.min(1, volume));
+}
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null;
+  if (!soundEnabled) return null;
+
   if (!audioCtx) {
     const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (AudioContextClass) {
@@ -21,7 +30,7 @@ function getAudioContext(): AudioContext | null {
 
 export function playClickSound() {
   const ctx = getAudioContext();
-  if (!ctx) return;
+  if (!ctx || !soundEnabled) return;
 
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
@@ -30,7 +39,7 @@ export function playClickSound() {
   osc.frequency.setValueAtTime(440, ctx.currentTime);
   osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.08);
 
-  gain.gain.setValueAtTime(0.15, ctx.currentTime);
+  gain.gain.setValueAtTime(0.15 * soundVolume, ctx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
 
   osc.connect(gain);
@@ -42,7 +51,7 @@ export function playClickSound() {
 
 export function playErrorSound() {
   const ctx = getAudioContext();
-  if (!ctx) return;
+  if (!ctx || !soundEnabled) return;
 
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
@@ -51,7 +60,7 @@ export function playErrorSound() {
   osc.frequency.setValueAtTime(220, ctx.currentTime);
   osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 0.25);
 
-  gain.gain.setValueAtTime(0.2, ctx.currentTime);
+  gain.gain.setValueAtTime(0.2 * soundVolume, ctx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
 
   osc.connect(gain);
@@ -63,7 +72,7 @@ export function playErrorSound() {
 
 export function playSuccessSound() {
   const ctx = getAudioContext();
-  if (!ctx) return;
+  if (!ctx || !soundEnabled) return;
 
   const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6 (Acorde Maior de Vitória)
   notes.forEach((freq, idx) => {
@@ -73,7 +82,7 @@ export function playSuccessSound() {
     osc.type = 'sine';
     osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.08);
 
-    gain.gain.setValueAtTime(0.18, ctx.currentTime + idx * 0.08);
+    gain.gain.setValueAtTime(0.18 * soundVolume, ctx.currentTime + idx * 0.08);
     gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + idx * 0.08 + 0.3);
 
     osc.connect(gain);
@@ -86,7 +95,7 @@ export function playSuccessSound() {
 
 export function playAchievementSound() {
   const ctx = getAudioContext();
-  if (!ctx) return;
+  if (!ctx || !soundEnabled) return;
 
   // Fanfarra estilo Minecraft "Challenge Complete" (G4, C5, E5, G5, C6)
   const notes = [392.00, 523.25, 659.25, 783.99, 1046.50];
@@ -97,7 +106,7 @@ export function playAchievementSound() {
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.12);
 
-    gain.gain.setValueAtTime(0.22, ctx.currentTime + idx * 0.12);
+    gain.gain.setValueAtTime(0.22 * soundVolume, ctx.currentTime + idx * 0.12);
     gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + idx * 0.12 + 0.45);
 
     osc.connect(gain);

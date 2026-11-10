@@ -2,38 +2,69 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import confetti from 'canvas-confetti';
-import { WORDS_DATA, WordItem, WordCategory } from '@/data/words';
+import { WORDS_DATA, WordItem, WordCategory, DifficultyLevel } from '@/data/words';
 import { ACHIEVEMENTS_LIST, Achievement, GameStats } from '@/data/achievements';
-import { speak } from '@/utils/speech';
-import { playClickSound, playErrorSound, playSuccessSound, playAchievementSound } from '@/utils/sfx';
+import { speak, updateSpeechSettings, SpeechSettings } from '@/utils/speech';
+import { 
+  playClickSound, 
+  playErrorSound, 
+  playSuccessSound, 
+  playAchievementSound, 
+  updateSoundSettings 
+} from '@/utils/sfx';
 
 const CATEGORIES: { label: string; value: WordCategory; icon: string }[] = [
   { label: 'Todos', value: 'TODOS', icon: '🌟' },
   { label: 'Alimentos', value: 'ALIMENTOS', icon: '🍎' },
   { label: 'Animais', value: 'ANIMAIS', icon: '🐶' },
+  { label: 'Cores', value: 'CORES', icon: '🎨' },
+  { label: 'Brinquedos', value: 'BRINQUEDOS', icon: '🧸' },
+  { label: 'Corpo', value: 'CORPO', icon: '👁️' },
+  { label: 'Profissões', value: 'PROFISSÕES', icon: '👨‍🚒' },
   { label: 'Objetos', value: 'OBJETOS', icon: '📱' },
   { label: 'Natureza', value: 'NATUREZA', icon: '🌳' },
 ];
 
+const DIFFICULTIES: { label: string; value: DifficultyLevel; icon: string; color: string }[] = [
+  { label: 'Fácil', value: 'FACIL', icon: '🌱', color: 'text-emerald-600 bg-emerald-50 border-emerald-300' },
+  { label: 'Médio', value: 'MEDIO', icon: '⚡', color: 'text-amber-600 bg-amber-50 border-amber-300' },
+  { label: 'Difícil', value: 'DIFICIL', icon: '🔥', color: 'text-rose-600 bg-rose-50 border-rose-300' },
+];
+
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<WordCategory>('TODOS');
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>('MEDIO');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedSyllables, setSelectedSyllables] = useState<string[]>([]);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isError, setIsError] = useState(false);
 
-  // Gamificação (XP, Esmeraldas e Nível persistidos)
+  // Gamificação (XP, Esmeraldas, Nível e Streak)
   const [xp, setXp] = useState(0);
   const [emeralds, setEmeralds] = useState(0);
   const [wordsCompleted, setWordsCompleted] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
   const [completedCategories, setCompletedCategories] = useState<Record<string, number>>({});
+  const [difficultyCount, setDifficultyCount] = useState<{ FACIL: number; MEDIO: number; DIFICIL: number }>({
+    FACIL: 0,
+    MEDIO: 0,
+    DIFICIL: 0
+  });
   const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
 
-  // Notificação de Conquista Recém-Desbloqueada
-  const [latestBadge, setLatestBadge] = useState<Achievement | null>(null);
-  const [showBadgesModal, setShowBadgesModal] = useState(false);
+  // Configurações do App
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [soundVolume, setSoundVolume] = useState(0.8);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [voiceRate, setVoiceRate] = useState(0.9);
 
-  // Carregar dados salvos e registrar Service Worker para PWA
+  // Modais e Toasts
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showBadgesModal, setShowBadgesModal] = useState(false);
+  const [latestBadge, setLatestBadge] = useState<Achievement | null>(null);
+
+  // Carregar dados e registrar Service Worker para PWA
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
       navigator.serviceWorker.register('/sw.js').catch((err) => {
@@ -45,35 +76,88 @@ export default function Home() {
       const savedXp = localStorage.getItem('craft_xp');
       const savedEmeralds = localStorage.getItem('craft_emeralds');
       const savedWords = localStorage.getItem('craft_words_completed');
+      const savedStreak = localStorage.getItem('craft_streak');
+      const savedBestStreak = localStorage.getItem('craft_best_streak');
       const savedCats = localStorage.getItem('craft_categories_completed');
+      const savedDiff = localStorage.getItem('craft_difficulty_count');
       const savedBadges = localStorage.getItem('craft_unlocked_badges');
+      const savedDiffSetting = localStorage.getItem('craft_preferred_difficulty');
+
+      // Configurações salvas
+      const savedSoundEnabled = localStorage.getItem('craft_cfg_sound_enabled');
+      const savedSoundVol = localStorage.getItem('craft_cfg_sound_volume');
+      const savedVoiceEnabled = localStorage.getItem('craft_cfg_voice_enabled');
+      const savedVoiceRate = localStorage.getItem('craft_cfg_voice_rate');
 
       if (savedXp) setXp(parseInt(savedXp, 10));
       if (savedEmeralds) setEmeralds(parseInt(savedEmeralds, 10));
       if (savedWords) setWordsCompleted(parseInt(savedWords, 10));
+      if (savedStreak) setStreak(parseInt(savedStreak, 10));
+      if (savedBestStreak) setBestStreak(parseInt(savedBestStreak, 10));
       if (savedCats) setCompletedCategories(JSON.parse(savedCats));
+      if (savedDiff) setDifficultyCount(JSON.parse(savedDiff));
       if (savedBadges) setUnlockedAchievements(JSON.parse(savedBadges));
+      if (savedDiffSetting) setDifficulty(savedDiffSetting as DifficultyLevel);
+
+      if (savedSoundEnabled !== null) {
+        const en = savedSoundEnabled === 'true';
+        setSoundEnabled(en);
+        updateSoundSettings(en, savedSoundVol ? parseFloat(savedSoundVol) : 0.8);
+      }
+      if (savedSoundVol !== null) {
+        setSoundVolume(parseFloat(savedSoundVol));
+      }
+      if (savedVoiceEnabled !== null) {
+        const ven = savedVoiceEnabled === 'true';
+        setVoiceEnabled(ven);
+        updateSpeechSettings({ voiceEnabled: ven });
+      }
+      if (savedVoiceRate !== null) {
+        const vr = parseFloat(savedVoiceRate);
+        setVoiceRate(vr);
+        updateSpeechSettings({ rate: vr });
+      }
     } catch {
-      // Ignora erro se localStorage restrito
+      // Ignora erro de localStorage
     }
   }, []);
 
-  // Salvar dados
-  const saveProgress = (
-    newXp: number,
-    newEmeralds: number,
-    newWords: number,
-    newCats: Record<string, number>,
-    newBadges: string[]
-  ) => {
+  // Salvar configurações
+  const handleUpdateSound = (enabled: boolean, vol: number) => {
+    setSoundEnabled(enabled);
+    setSoundVolume(vol);
+    updateSoundSettings(enabled, vol);
     try {
-      localStorage.setItem('craft_xp', newXp.toString());
-      localStorage.setItem('craft_emeralds', newEmeralds.toString());
-      localStorage.setItem('craft_words_completed', newWords.toString());
-      localStorage.setItem('craft_categories_completed', JSON.stringify(newCats));
-      localStorage.setItem('craft_unlocked_badges', JSON.stringify(newBadges));
-    } catch {
-      // Ignora erro
+      localStorage.setItem('craft_cfg_sound_enabled', enabled.toString());
+      localStorage.setItem('craft_cfg_sound_volume', vol.toString());
+    } catch {}
+  };
+
+  const handleUpdateVoice = (enabled: boolean, rate: number) => {
+    setVoiceEnabled(enabled);
+    setVoiceRate(rate);
+    updateSpeechSettings({ voiceEnabled: enabled, rate });
+    try {
+      localStorage.setItem('craft_cfg_voice_enabled', enabled.toString());
+      localStorage.setItem('craft_cfg_voice_rate', rate.toString());
+    } catch {}
+  };
+
+  const handleResetAllData = () => {
+    if (confirm('Tem certeza de que deseja zerar todo o progresso (XP, Esmeraldas e Troféus)?')) {
+      try {
+        localStorage.clear();
+      } catch {}
+      setXp(0);
+      setEmeralds(0);
+      setWordsCompleted(0);
+      setStreak(0);
+      setBestStreak(0);
+      setCompletedCategories({});
+      setDifficultyCount({ FACIL: 0, MEDIO: 0, DIFICIL: 0 });
+      setUnlockedAchievements([]);
+      setShowSettingsModal(false);
+      speak('Progresso reiniciado com sucesso.');
     }
   };
 
@@ -106,6 +190,17 @@ export default function Home() {
     playClickSound();
     setSelectedCategory(category);
     setCurrentIndex(0);
+  };
+
+  const handleDifficultyChange = (diff: DifficultyLevel) => {
+    playClickSound();
+    setDifficulty(diff);
+    setSelectedSyllables([]);
+    setIsSuccess(false);
+    setIsError(false);
+    try {
+      localStorage.setItem('craft_preferred_difficulty', diff);
+    } catch {}
   };
 
   const triggerConfetti = () => {
@@ -173,6 +268,11 @@ export default function Home() {
     if (!isCorrectSoFar) {
       playErrorSound();
       setIsError(true);
+      setStreak(0); // Quebra o combo
+      try {
+        localStorage.setItem('craft_streak', '0');
+      } catch {}
+
       setTimeout(() => {
         speak('Tente de novo! Vamos limpar.');
         setSelectedSyllables([]);
@@ -187,13 +287,21 @@ export default function Home() {
       playSuccessSound();
       triggerConfetti();
 
-      // Atualização de Estatísticas
-      const nextXp = xp + 25;
-      const nextEmeralds = emeralds + 1;
+      // Cálculo de Bônus por Dificuldade e Combo
+      const difficultyBonus = difficulty === 'DIFICIL' ? 40 : difficulty === 'MEDIO' ? 25 : 15;
+      const nextStreak = streak + 1;
+      const nextBestStreak = Math.max(bestStreak, nextStreak);
+      const streakBonus = nextStreak >= 3 ? 10 : 0;
+      const nextXp = xp + difficultyBonus + streakBonus;
+      const nextEmeralds = emeralds + (difficulty === 'DIFICIL' ? 2 : 1);
       const nextWords = wordsCompleted + 1;
       const nextCats = {
         ...completedCategories,
         [currentItem.category]: (completedCategories[currentItem.category] || 0) + 1
+      };
+      const nextDiffCount = {
+        ...difficultyCount,
+        [difficulty]: (difficultyCount[difficulty] || 0) + 1
       };
       const nextLevel = Math.floor(nextXp / 100) + 1;
 
@@ -201,7 +309,10 @@ export default function Home() {
         wordsCompleted: nextWords,
         emeralds: nextEmeralds,
         level: nextLevel,
-        completedCategories: nextCats
+        streak: nextStreak,
+        bestStreak: nextBestStreak,
+        completedCategories: nextCats,
+        difficultyCount: nextDiffCount
       };
 
       const nextBadges = checkAchievements(currentStats, unlockedAchievements);
@@ -209,12 +320,26 @@ export default function Home() {
       setXp(nextXp);
       setEmeralds(nextEmeralds);
       setWordsCompleted(nextWords);
+      setStreak(nextStreak);
+      setBestStreak(nextBestStreak);
       setCompletedCategories(nextCats);
+      setDifficultyCount(nextDiffCount);
       setUnlockedAchievements(nextBadges);
-      saveProgress(nextXp, nextEmeralds, nextWords, nextCats, nextBadges);
+
+      try {
+        localStorage.setItem('craft_xp', nextXp.toString());
+        localStorage.setItem('craft_emeralds', nextEmeralds.toString());
+        localStorage.setItem('craft_words_completed', nextWords.toString());
+        localStorage.setItem('craft_streak', nextStreak.toString());
+        localStorage.setItem('craft_best_streak', nextBestStreak.toString());
+        localStorage.setItem('craft_categories_completed', JSON.stringify(nextCats));
+        localStorage.setItem('craft_difficulty_count', JSON.stringify(nextDiffCount));
+        localStorage.setItem('craft_unlocked_badges', JSON.stringify(nextBadges));
+      } catch {}
 
       setTimeout(() => {
-        speak(`Muito bem! Acertou: ${currentItem.word}! Você ganhou uma esmeralda!`, 0.9);
+        const comboMsg = nextStreak >= 3 ? ` Combo de ${nextStreak} acertos!` : '';
+        speak(`Muito bem! Acertou: ${currentItem.word}!${comboMsg}`, 0.9);
       }, 400);
     }
   };
@@ -236,9 +361,12 @@ export default function Home() {
     speak('Recomeçando a palavra.');
   };
 
+  // Opções dinâmicas de acordo com o nível de dificuldade selecionado
+  const currentOptions = currentItem.options[difficulty] || currentItem.options.MEDIO;
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-sky-100 via-amber-50 to-emerald-50 flex flex-col items-center justify-between p-3 sm:p-6 select-none relative overflow-x-hidden">
-      {/* Banner Flutuante de Conquista Desbloqueada (Estilo Minecraft Advancements) */}
+      {/* Banner Flutuante de Conquista Desbloqueada */}
       {latestBadge && (
         <div className="fixed top-4 z-50 animate-pop max-w-sm w-11/12 bg-slate-900 border-2 border-amber-400 text-white p-3 rounded-2xl shadow-2xl flex items-center gap-3">
           <div className="text-4xl bg-slate-800 p-2 rounded-xl border border-amber-400/50">
@@ -254,7 +382,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Barra de Status Gamificada (Nível, XP, Esmeraldas e Botão de Conquistas) */}
+      {/* Barra de Status Gamificada */}
       <section className="w-full max-w-md bg-slate-900 text-white p-3 rounded-2xl shadow-lg border-2 border-slate-700 flex flex-col gap-2">
         <div className="flex justify-between items-center text-sm font-bold">
           <div className="flex items-center gap-2">
@@ -262,22 +390,38 @@ export default function Home() {
               LVL {level}
             </span>
             <span className="text-emerald-400 font-mono tracking-wide">{currentLevelXp}/100 XP</span>
+            {streak >= 2 && (
+              <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-lg text-xs font-black animate-pulse flex items-center gap-1">
+                🔥 {streak}x
+              </span>
+            )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={() => {
                 playClickSound();
                 setShowBadgesModal(true);
               }}
               className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/50 px-2 py-1 rounded-xl text-xs font-black flex items-center gap-1 transition active:scale-95 cursor-pointer"
+              title="Ver Conquistas"
             >
               🏆 {unlockedAchievements.length}/{ACHIEVEMENTS_LIST.length}
             </button>
-            <div className="flex items-center gap-1 bg-slate-800 px-2.5 py-1 rounded-xl border border-emerald-600/50">
-              <span className="text-base">💎</span>
+            <div className="flex items-center gap-1 bg-slate-800 px-2 py-1 rounded-xl border border-emerald-600/50">
+              <span className="text-sm">💎</span>
               <span className="text-emerald-300 font-black text-xs sm:text-sm">{emeralds}</span>
             </div>
+            <button
+              onClick={() => {
+                playClickSound();
+                setShowSettingsModal(true);
+              }}
+              className="bg-slate-800 hover:bg-slate-700 text-slate-300 p-1.5 rounded-xl border border-slate-600 transition active:scale-95 cursor-pointer text-sm"
+              title="Configurações"
+            >
+              ⚙️
+            </button>
           </div>
         </div>
 
@@ -290,8 +434,31 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Controles de Nível de Dificuldade */}
+      <div className="w-full max-w-md flex justify-between items-center my-1 px-1">
+        <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
+          Dificuldade:
+        </span>
+        <div className="flex gap-1.5">
+          {DIFFICULTIES.map((diff) => (
+            <button
+              key={diff.value}
+              onClick={() => handleDifficultyChange(diff.value)}
+              className={`px-2.5 py-1 rounded-xl text-xs font-black flex items-center gap-1 border-2 transition cursor-pointer ${
+                difficulty === diff.value
+                  ? `${diff.color} shadow-sm scale-105 font-extrabold`
+                  : 'bg-white/70 text-slate-400 border-slate-200 hover:bg-white'
+              }`}
+            >
+              <span>{diff.icon}</span>
+              <span>{diff.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Seletor de Categorias / Fases */}
-      <nav className="w-full max-w-md flex gap-2 overflow-x-auto py-2 px-1 scrollbar-none my-1">
+      <nav className="w-full max-w-md flex gap-2 overflow-x-auto py-1 px-1 scrollbar-none my-1">
         {CATEGORIES.map((cat) => (
           <button
             key={cat.value}
@@ -365,7 +532,7 @@ export default function Home() {
         {/* Opções de Sílabas */}
         {!isSuccess ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 w-full mt-2">
-            {currentItem.options.map((option, idx) => (
+            {currentOptions.map((option, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSelectSyllable(option)}
@@ -381,7 +548,7 @@ export default function Home() {
               🌟 PARABÉNS! 🌟
             </p>
             <p className="text-slate-600 font-bold text-sm mb-4">
-              +25 XP • +1 Esmeralda Coletada! 💎
+              +{difficulty === 'DIFICIL' ? 40 : difficulty === 'MEDIO' ? 25 : 15} XP • +{difficulty === 'DIFICIL' ? 2 : 1} Esmeralda(s)! 💎
             </p>
             <button
               onClick={handleNext}
@@ -479,6 +646,112 @@ export default function Home() {
               className="mt-5 w-full py-3 bg-amber-400 hover:bg-amber-500 text-amber-950 font-black rounded-2xl text-base transition border-b-4 border-amber-600 active:border-b-0 active:translate-y-1 cursor-pointer"
             >
               CONTINUAR JOGANDO 🎮
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Configurações */}
+      {showSettingsModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 animate-pop">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-4 border-slate-300 flex flex-col">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-3xl">⚙️</span>
+                <h3 className="text-xl font-black text-slate-800">Configurações</h3>
+              </div>
+              <button
+                onClick={() => {
+                  playClickSound();
+                  setShowSettingsModal(false);
+                }}
+                className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black flex items-center justify-center transition active:scale-95 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-4">
+              {/* Efeitos Sonoros */}
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex justify-between items-center">
+                <div>
+                  <h4 className="font-black text-slate-800 text-sm">Efeitos Sonoros (SFX)</h4>
+                  <p className="text-xs text-slate-500">Cliques, vitória e fanfarras</p>
+                </div>
+                <button
+                  onClick={() => handleUpdateSound(!soundEnabled, soundVolume)}
+                  className={`px-3 py-1.5 rounded-xl font-black text-xs transition cursor-pointer border ${
+                    soundEnabled
+                      ? 'bg-emerald-500 text-white border-emerald-600'
+                      : 'bg-slate-300 text-slate-600 border-slate-400'
+                  }`}
+                >
+                  {soundEnabled ? 'LIGADO 🔊' : 'MUDO 🔇'}
+                </button>
+              </div>
+
+              {/* Voz Narradora */}
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex justify-between items-center">
+                <div>
+                  <h4 className="font-black text-slate-800 text-sm">Voz do Narrador</h4>
+                  <p className="text-xs text-slate-500">Leitura de sílabas e palavras</p>
+                </div>
+                <button
+                  onClick={() => handleUpdateVoice(!voiceEnabled, voiceRate)}
+                  className={`px-3 py-1.5 rounded-xl font-black text-xs transition cursor-pointer border ${
+                    voiceEnabled
+                      ? 'bg-emerald-500 text-white border-emerald-600'
+                      : 'bg-slate-300 text-slate-600 border-slate-400'
+                  }`}
+                >
+                  {voiceEnabled ? 'LIGADO 🗣️' : 'MUDO 🔇'}
+                </button>
+              </div>
+
+              {/* Velocidade de Leitura */}
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="font-black text-slate-800 text-sm">Velocidade da Fala</h4>
+                  <span className="text-xs font-mono font-bold text-amber-600">
+                    {voiceRate <= 0.8 ? 'Mais Lenta (Infantil)' : voiceRate >= 1.1 ? 'Rápida' : 'Normal'}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  {[0.7, 0.9, 1.1].map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => handleUpdateVoice(voiceEnabled, r)}
+                      className={`flex-1 py-1.5 rounded-xl text-xs font-black border transition cursor-pointer ${
+                        voiceRate === r
+                          ? 'bg-amber-400 text-amber-950 border-amber-600 font-black'
+                          : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100'
+                      }`}
+                    >
+                      {r === 0.7 ? '🐢 0.7x' : r === 0.9 ? '🧒 0.9x' : '⚡ 1.1x'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Zona de Perigo / Reset */}
+              <div className="mt-2 pt-2 border-t border-slate-200">
+                <button
+                  onClick={handleResetAllData}
+                  className="w-full py-2.5 bg-red-50 hover:bg-red-100 active:bg-red-200 text-red-600 border border-red-200 rounded-2xl text-xs font-black transition cursor-pointer"
+                >
+                  ⚠️ Zerar Todo Progresso e Conquistas
+                </button>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                playClickSound();
+                setShowSettingsModal(false);
+              }}
+              className="mt-5 w-full py-3 bg-amber-400 hover:bg-amber-500 text-amber-950 font-black rounded-2xl text-base transition border-b-4 border-amber-600 active:border-b-0 active:translate-y-1 cursor-pointer"
+            >
+              FECHAR ✕
             </button>
           </div>
         </div>

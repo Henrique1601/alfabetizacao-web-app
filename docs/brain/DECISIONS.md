@@ -37,5 +37,15 @@ Registro das decisões arquiteturais e escolhas técnicas do projeto (ADRs).
 ## [ADR-006] Progressive Web App (PWA) & Capacidade Offline
 - **Status:** Aceito
 - **Data:** 2026-11-09
-- **Contexto:** Permitir que o jogo seja instalado em dispositivos móveis (tablets e smartphones de crianças) sem necessidade de loja de aplicativos e com suporte a funcionamento sem conexão com a internet.
-- **Decisão:** Criação do manifesto web (`public/manifest.json`), ícones de design voxel nos formatos 192x192 e 512x512, service worker de cache offline (`public/sw.js`) e metadados no App Router (`src/app/layout.tsx`).
+- **Contexto:** Permitir que o jogo seja instalado em dispositivos móveis sem necessidade de loja de aplicativos e com suporte offline.
+- **Decisão:** Criação do manifesto web, ícones voxel 192/512 e service worker com cache automático.
+
+## [ADR-007] Configurações, Níveis de Dificuldade & Expansão de Vocabulário
+- **Status:** Aceito
+- **Data:** 2026-11-09
+- **Contexto:** Dar controle aos pais/educadores sobre som/velocidade da voz e oferecer curva de aprendizado adaptativa para crianças de diferentes idades.
+- **Decisão:** 
+  1. Painel modal de Configurações com ajuste de voz (velocidade 0.7x, 0.9x, 1.1x), mudo independente de SFX e Narrador, e reset seguro de progresso.
+  2. Níveis de Dificuldade dinâmicos (`Fácil`, `Médio`, `Difícil`) adaptando o número e a complexidade dos distratores de sílabas com multiplicadores de XP/Esmeraldas.
+  3. Sistema de Combo (Streak) com multiplicador visual de chamas.
+  4. Expansão para 48 palavras e 9 categorias temáticas.
