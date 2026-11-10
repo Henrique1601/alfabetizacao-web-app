@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import confetti from 'canvas-confetti';
-import { WORDS_DATA, WordItem, WordCategory, DifficultyLevel } from '@/data/words';
+import { WORDS_DATA, WordItem, WordCategory, DifficultyLevel, ProfileMode } from '@/data/words';
 import { ACHIEVEMENTS_LIST, Achievement, GameStats } from '@/data/achievements';
-import SpellingMinigame from '@/components/SpellingMinigame';
-import { speak, updateSpeechSettings, SpeechSettings } from '@/utils/speech';
+import { speak, updateSpeechSettings } from '@/utils/speech';
 import { 
   playClickSound, 
   playErrorSound, 
@@ -13,17 +12,25 @@ import {
   playAchievementSound, 
   updateSoundSettings 
 } from '@/utils/sfx';
+import SpellingMinigame from '@/components/SpellingMinigame';
+import PhonicsTrainerModal from '@/components/PhonicsTrainerModal';
+import LearningTrailModal from '@/components/LearningTrailModal';
 
-const CATEGORIES: { label: string; value: WordCategory; icon: string }[] = [
+const CATEGORIES_INFANTIL: { label: string; value: WordCategory; icon: string }[] = [
   { label: 'Todos', value: 'TODOS', icon: '🌟' },
   { label: 'Alimentos', value: 'ALIMENTOS', icon: '🍎' },
   { label: 'Animais', value: 'ANIMAIS', icon: '🐶' },
   { label: 'Cores', value: 'CORES', icon: '🎨' },
   { label: 'Brinquedos', value: 'BRINQUEDOS', icon: '🧸' },
-  { label: 'Corpo', value: 'CORPO', icon: '👁️' },
-  { label: 'Profissões', value: 'PROFISSÕES', icon: '👨‍🚒' },
-  { label: 'Objetos', value: 'OBJETOS', icon: '📱' },
-  { label: 'Natureza', value: 'NATUREZA', icon: '🌳' },
+];
+
+const CATEGORIES_EJA: { label: string; value: WordCategory; icon: string }[] = [
+  { label: 'Todos', value: 'TODOS', icon: '🌟' },
+  { label: 'Trabalho', value: 'TRABALHO', icon: '💼' },
+  { label: 'Saúde', value: 'SAÚDE', icon: '🩺' },
+  { label: 'Cidade', value: 'CIDADE', icon: '🏙️' },
+  { label: 'Documentos', value: 'DOCUMENTOS', icon: '📄' },
+  { label: 'Alimentos', value: 'ALIMENTOS', icon: '🍞' },
 ];
 
 const DIFFICULTIES: { label: string; value: DifficultyLevel; icon: string; color: string }[] = [
@@ -33,6 +40,8 @@ const DIFFICULTIES: { label: string; value: DifficultyLevel; icon: string; color
 ];
 
 export default function Home() {
+  // Perfil Pedagógico (Infantil vs Adultos/EJA)
+  const [profileMode, setProfileMode] = useState<ProfileMode>('INFANTIL');
   const [selectedCategory, setSelectedCategory] = useState<WordCategory>('TODOS');
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('MEDIO');
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -64,6 +73,8 @@ export default function Home() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showBadgesModal, setShowBadgesModal] = useState(false);
   const [showSpellingModal, setShowSpellingModal] = useState(false);
+  const [showPhonicsModal, setShowPhonicsModal] = useState(false);
+  const [showTrailModal, setShowTrailModal] = useState(false);
   const [latestBadge, setLatestBadge] = useState<Achievement | null>(null);
 
   // Carregar dados e registrar Service Worker para PWA
@@ -75,6 +86,7 @@ export default function Home() {
     }
 
     try {
+      const savedProfile = localStorage.getItem('craft_profile_mode');
       const savedXp = localStorage.getItem('craft_xp');
       const savedEmeralds = localStorage.getItem('craft_emeralds');
       const savedWords = localStorage.getItem('craft_words_completed');
@@ -85,12 +97,12 @@ export default function Home() {
       const savedBadges = localStorage.getItem('craft_unlocked_badges');
       const savedDiffSetting = localStorage.getItem('craft_preferred_difficulty');
 
-      // Configurações salvas
       const savedSoundEnabled = localStorage.getItem('craft_cfg_sound_enabled');
       const savedSoundVol = localStorage.getItem('craft_cfg_sound_volume');
       const savedVoiceEnabled = localStorage.getItem('craft_cfg_voice_enabled');
       const savedVoiceRate = localStorage.getItem('craft_cfg_voice_rate');
 
+      if (savedProfile) setProfileMode(savedProfile as ProfileMode);
       if (savedXp) setXp(parseInt(savedXp, 10));
       if (savedEmeralds) setEmeralds(parseInt(savedEmeralds, 10));
       if (savedWords) setWordsCompleted(parseInt(savedWords, 10));
@@ -120,11 +132,21 @@ export default function Home() {
         updateSpeechSettings({ rate: vr });
       }
     } catch {
-      // Ignora erro de localStorage
+      // Ignora erro
     }
   }, []);
 
-  // Salvar configurações
+  const handleProfileChange = (mode: ProfileMode) => {
+    playClickSound();
+    setProfileMode(mode);
+    setSelectedCategory('TODOS');
+    setCurrentIndex(0);
+    try {
+      localStorage.setItem('craft_profile_mode', mode);
+    } catch {}
+    speak(mode === 'EJA' ? 'Modo Educação de Adultos ativado. Palavras do cotidiano e cidadania.' : 'Modo Infantil Lúdico ativado.');
+  };
+
   const handleUpdateSound = (enabled: boolean, vol: number) => {
     setSoundEnabled(enabled);
     setSoundVolume(vol);
@@ -163,15 +185,17 @@ export default function Home() {
     }
   };
 
-  // Filtragem de palavras por categoria
+  // Filtragem de palavras por perfil e categoria
   const filteredWords = useMemo(() => {
-    if (selectedCategory === 'TODOS') return WORDS_DATA;
-    return WORDS_DATA.filter((w) => w.category === selectedCategory);
-  }, [selectedCategory]);
+    let list = WORDS_DATA.filter((w) => w.profile === 'TODOS' || w.profile === profileMode);
+    if (selectedCategory !== 'TODOS') {
+      list = list.filter((w) => w.category === selectedCategory);
+    }
+    return list.length > 0 ? list : WORDS_DATA;
+  }, [profileMode, selectedCategory]);
 
   const currentItem: WordItem = filteredWords[currentIndex] || filteredWords[0] || WORDS_DATA[0];
 
-  // Cálculo de nível no estilo RPG/Minecraft
   const level = Math.floor(xp / 100) + 1;
   const currentLevelXp = xp % 100;
 
@@ -231,7 +255,6 @@ export default function Home() {
     })();
   };
 
-  // Checagem de Conquistas
   const checkAchievements = (stats: GameStats, currentBadges: string[]): string[] => {
     const updated = [...currentBadges];
     let newlyUnlocked: Achievement | null = null;
@@ -263,14 +286,13 @@ export default function Home() {
     const newSelected = [...selectedSyllables, syl];
     setSelectedSyllables(newSelected);
 
-    // Verifica se a sequência parcial está correta
     const expected = currentItem.syllables.slice(0, newSelected.length);
     const isCorrectSoFar = newSelected.every((val, idx) => val === expected[idx]);
 
     if (!isCorrectSoFar) {
       playErrorSound();
       setIsError(true);
-      setStreak(0); // Quebra o combo
+      setStreak(0);
       try {
         localStorage.setItem('craft_streak', '0');
       } catch {}
@@ -283,13 +305,11 @@ export default function Home() {
       return;
     }
 
-    // Se completou a palavra inteira
     if (newSelected.length === currentItem.syllables.length) {
       setIsSuccess(true);
       playSuccessSound();
       triggerConfetti();
 
-      // Cálculo de Bônus por Dificuldade e Combo
       const difficultyBonus = difficulty === 'DIFICIL' ? 40 : difficulty === 'MEDIO' ? 25 : 15;
       const nextStreak = streak + 1;
       const nextBestStreak = Math.max(bestStreak, nextStreak);
@@ -340,13 +360,13 @@ export default function Home() {
       } catch {}
 
       setTimeout(() => {
-        const comboMsg = nextStreak >= 3 ? ` Combo de ${nextStreak} acertos!` : '';
+        const comboMsg = nextStreak >= 3 ? ` Sequência de ${nextStreak} acertos!` : '';
         speak(`Muito bem! Acertou: ${currentItem.word}!${comboMsg}`, 0.9);
       }, 400);
     }
   };
 
-  const handleSpellingComplete = (bonusXp: number, bonusEmeralds: number) => {
+  const handleBonusComplete = (bonusXp: number, bonusEmeralds: number) => {
     const nextXp = xp + bonusXp;
     const nextEmeralds = emeralds + bonusEmeralds;
     setXp(nextXp);
@@ -374,12 +394,12 @@ export default function Home() {
     speak('Recomeçando a palavra.');
   };
 
-  // Opções dinâmicas de acordo com o nível de dificuldade selecionado
+  const activeCategories = profileMode === 'INFANTIL' ? CATEGORIES_INFANTIL : CATEGORIES_EJA;
   const currentOptions = currentItem.options[difficulty] || currentItem.options.MEDIO;
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-sky-100 via-amber-50 to-emerald-50 flex flex-col items-center justify-between p-3 sm:p-6 select-none relative overflow-x-hidden">
-      {/* Banner Flutuante de Conquista Desbloqueada */}
+      {/* Banner Flutuante de Conquista */}
       {latestBadge && (
         <div className="fixed top-4 z-50 animate-pop max-w-sm w-11/12 bg-slate-900 border-2 border-amber-400 text-white p-3 rounded-2xl shadow-2xl flex items-center gap-3">
           <div className="text-4xl bg-slate-800 p-2 rounded-xl border border-amber-400/50">
@@ -399,9 +419,17 @@ export default function Home() {
       <section className="w-full max-w-md bg-slate-900 text-white p-3 rounded-2xl shadow-lg border-2 border-slate-700 flex flex-col gap-2">
         <div className="flex justify-between items-center text-sm font-bold">
           <div className="flex items-center gap-2">
-            <span className="bg-emerald-500 text-slate-950 px-2 py-0.5 rounded-lg text-xs font-black">
-              LVL {level}
-            </span>
+            <button
+              onClick={() => {
+                playClickSound();
+                setShowTrailModal(true);
+              }}
+              className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 px-2.5 py-0.5 rounded-lg text-xs font-black flex items-center gap-1 transition active:scale-95 cursor-pointer shadow-sm"
+              title="Abrir Trilha de Aprendizado"
+            >
+              <span>🗺️</span>
+              <span>LVL {level}</span>
+            </button>
             <span className="text-emerald-400 font-mono tracking-wide">{currentLevelXp}/100 XP</span>
             {streak >= 2 && (
               <span className="bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-lg text-xs font-black animate-pulse flex items-center gap-1">
@@ -421,7 +449,7 @@ export default function Home() {
             >
               🏆 {unlockedAchievements.length}/{ACHIEVEMENTS_LIST.length}
             </button>
-            <div className="flex items-center gap-1 bg-slate-800 px-2 py-1 rounded-xl border border-emerald-600/50">
+            <div className="flex items-center gap-1 bg-slate-800 px-2.5 py-1 rounded-xl border border-emerald-600/50">
               <span className="text-sm">💎</span>
               <span className="text-emerald-300 font-black text-xs sm:text-sm">{emeralds}</span>
             </div>
@@ -447,9 +475,49 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Alternador de Perfil Pedagógico (Infantil vs Adultos/EJA) */}
+      <div className="w-full max-w-md flex justify-between items-center my-1.5 px-1 bg-white/70 backdrop-blur-xs p-1.5 rounded-2xl border border-slate-200">
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => handleProfileChange('INFANTIL')}
+            className={`px-3 py-1 rounded-xl text-xs font-black flex items-center gap-1 transition cursor-pointer ${
+              profileMode === 'INFANTIL'
+                ? 'bg-amber-400 text-amber-950 shadow-sm border border-amber-500'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <span>🧒</span>
+            <span>Infantil Craft</span>
+          </button>
+          <button
+            onClick={() => handleProfileChange('EJA')}
+            className={`px-3 py-1 rounded-xl text-xs font-black flex items-center gap-1 transition cursor-pointer ${
+              profileMode === 'EJA'
+                ? 'bg-sky-600 text-white shadow-sm border border-sky-700'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <span>💼</span>
+            <span>Adultos (EJA)</span>
+          </button>
+        </div>
+
+        {/* Botão Treino Fônico (GraphoGame) */}
+        <button
+          onClick={() => {
+            playClickSound();
+            setShowPhonicsModal(true);
+          }}
+          className="bg-sky-100 hover:bg-sky-200 text-sky-900 border border-sky-300 px-2.5 py-1 rounded-xl text-xs font-black flex items-center gap-1 transition active:scale-95 cursor-pointer shadow-xs"
+        >
+          <span>👂</span>
+          <span>Treino Fônico</span>
+        </button>
+      </div>
+
       {/* Controles de Nível de Dificuldade */}
       <div className="w-full max-w-md flex justify-between items-center my-1 px-1">
-        <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">
+        <span className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
           Dificuldade:
         </span>
         <div className="flex gap-1.5">
@@ -472,7 +540,7 @@ export default function Home() {
 
       {/* Seletor de Categorias / Fases */}
       <nav className="w-full max-w-md flex gap-2 overflow-x-auto py-1 px-1 scrollbar-none my-1">
-        {CATEGORIES.map((cat) => (
+        {activeCategories.map((cat) => (
           <button
             key={cat.value}
             onClick={() => handleCategoryChange(cat.value)}
@@ -573,7 +641,7 @@ export default function Home() {
         )}
       </div>
 
-      {/* Controlos Inferiores */}
+      {/* Controlos Inferiores com Suporte Voice-First */}
       <footer className="w-full max-w-md flex justify-between gap-2.5 mt-2">
         <button
           onClick={handleReset}
@@ -695,7 +763,6 @@ export default function Home() {
             </div>
 
             <div className="flex flex-col gap-4">
-              {/* Efeitos Sonoros */}
               <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex justify-between items-center">
                 <div>
                   <h4 className="font-black text-slate-800 text-sm">Efeitos Sonoros (SFX)</h4>
@@ -713,7 +780,6 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Voz Narradora */}
               <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex justify-between items-center">
                 <div>
                   <h4 className="font-black text-slate-800 text-sm">Voz do Narrador</h4>
@@ -731,7 +797,6 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Velocidade de Leitura */}
               <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
                 <div className="flex justify-between items-center mb-2">
                   <h4 className="font-black text-slate-800 text-sm">Velocidade da Fala</h4>
@@ -756,7 +821,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Zona de Perigo / Reset */}
               <div className="mt-2 pt-2 border-t border-slate-200">
                 <button
                   onClick={handleResetAllData}
@@ -780,12 +844,29 @@ export default function Home() {
         </div>
       )}
 
-      {/* Minigame de Soletração Letra por Letra */}
+      {/* Minigame de Soletração */}
       {showSpellingModal && (
         <SpellingMinigame
           wordItem={currentItem}
-          onComplete={handleSpellingComplete}
+          onComplete={handleBonusComplete}
           onClose={() => setShowSpellingModal(false)}
+        />
+      )}
+
+      {/* Modal Treino Fônico (GraphoGame) */}
+      {showPhonicsModal && (
+        <PhonicsTrainerModal
+          onComplete={handleBonusComplete}
+          onClose={() => setShowPhonicsModal(false)}
+        />
+      )}
+
+      {/* Modal Trilha do Conhecimento */}
+      {showTrailModal && (
+        <LearningTrailModal
+          currentXp={xp}
+          userLevel={level}
+          onClose={() => setShowTrailModal(false)}
         />
       )}
     </main>

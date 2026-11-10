@@ -1,13 +1,20 @@
+export type ProfileMode = 'INFANTIL' | 'EJA';
+
 export type WordCategory = 
   | 'TODOS' 
+  // Categorias Infantis / Gerais
   | 'ALIMENTOS' 
   | 'ANIMAIS' 
-  | 'OBJETOS' 
-  | 'NATUREZA' 
   | 'CORES' 
   | 'BRINQUEDOS' 
   | 'CORPO' 
-  | 'PROFISSÕES';
+  | 'OBJETOS' 
+  | 'NATUREZA'
+  // Categorias EJA / Adultos (Cidadania & Cotidiano)
+  | 'TRABALHO'
+  | 'SAÚDE'
+  | 'CIDADE'
+  | 'DOCUMENTOS';
 
 export type DifficultyLevel = 'FACIL' | 'MEDIO' | 'DIFICIL';
 
@@ -16,19 +23,20 @@ export interface WordItem {
   word: string;
   icon: string;
   category: WordCategory;
+  profile: 'TODOS' | ProfileMode;
   difficulty: DifficultyLevel;
   syllables: string[];
   options: {
-    FACIL: string[];    // Sílabas corretas + 1 ou 2 distratores
-    MEDIO: string[];    // Sílabas corretas + 3 distratores
-    DIFICIL: string[];  // Sílabas corretas + 4 ou 5 distratores desafiadores
+    FACIL: string[];
+    MEDIO: string[];
+    DIFICIL: string[];
   };
 }
 
 export const WORDS_DATA: WordItem[] = [
-  // ==================== ALIMENTOS ====================
+  // ==================== ALIMENTOS (TODOS / INFANTIL) ====================
   { 
-    id: '1', word: 'CAFÉ', icon: '☕', category: 'ALIMENTOS', difficulty: 'FACIL',
+    id: '1', word: 'CAFÉ', icon: '☕', category: 'ALIMENTOS', profile: 'TODOS', difficulty: 'FACIL',
     syllables: ['CA', 'FÉ'],
     options: {
       FACIL: ['CA', 'FÉ', 'BA'],
@@ -37,7 +45,7 @@ export const WORDS_DATA: WordItem[] = [
     }
   },
   { 
-    id: '2', word: 'PÃO', icon: '🍞', category: 'ALIMENTOS', difficulty: 'FACIL',
+    id: '2', word: 'PÃO', icon: '🍞', category: 'ALIMENTOS', profile: 'TODOS', difficulty: 'FACIL',
     syllables: ['PÃO'],
     options: {
       FACIL: ['PÃO', 'MÃO'],
@@ -46,7 +54,7 @@ export const WORDS_DATA: WordItem[] = [
     }
   },
   { 
-    id: '3', word: 'MAMÃO', icon: '🥭', category: 'ALIMENTOS', difficulty: 'FACIL',
+    id: '3', word: 'MAMÃO', icon: '🥭', category: 'ALIMENTOS', profile: 'TODOS', difficulty: 'FACIL',
     syllables: ['MA', 'MÃO'],
     options: {
       FACIL: ['MA', 'MÃO', 'PA'],
@@ -55,7 +63,7 @@ export const WORDS_DATA: WordItem[] = [
     }
   },
   { 
-    id: '4', word: 'AÇÚCAR', icon: '🍬', category: 'ALIMENTOS', difficulty: 'MEDIO',
+    id: '4', word: 'AÇÚCAR', icon: '🍬', category: 'ALIMENTOS', profile: 'TODOS', difficulty: 'MEDIO',
     syllables: ['A', 'ÇÚ', 'CAR'],
     options: {
       FACIL: ['A', 'ÇÚ', 'CAR', 'BA'],
@@ -64,7 +72,7 @@ export const WORDS_DATA: WordItem[] = [
     }
   },
   { 
-    id: '5', word: 'COMIDA', icon: '🍲', category: 'ALIMENTOS', difficulty: 'MEDIO',
+    id: '5', word: 'COMIDA', icon: '🍲', category: 'ALIMENTOS', profile: 'TODOS', difficulty: 'MEDIO',
     syllables: ['CO', 'MI', 'DA'],
     options: {
       FACIL: ['CO', 'MI', 'DA', 'DE'],
@@ -73,7 +81,7 @@ export const WORDS_DATA: WordItem[] = [
     }
   },
   { 
-    id: '6', word: 'ARROZ', icon: '🍚', category: 'ALIMENTOS', difficulty: 'MEDIO',
+    id: '6', word: 'ARROZ', icon: '🍚', category: 'ALIMENTOS', profile: 'TODOS', difficulty: 'MEDIO',
     syllables: ['AR', 'ROZ'],
     options: {
       FACIL: ['AR', 'ROZ', 'AL'],
@@ -82,7 +90,7 @@ export const WORDS_DATA: WordItem[] = [
     }
   },
   { 
-    id: '7', word: 'BANANA', icon: '🍌', category: 'ALIMENTOS', difficulty: 'MEDIO',
+    id: '7', word: 'BANANA', icon: '🍌', category: 'ALIMENTOS', profile: 'INFANTIL', difficulty: 'MEDIO',
     syllables: ['BA', 'NA', 'NA'],
     options: {
       FACIL: ['BA', 'NA', 'MA'],
@@ -91,7 +99,7 @@ export const WORDS_DATA: WordItem[] = [
     }
   },
   { 
-    id: '8', word: 'MAÇÃ', icon: '🍎', category: 'ALIMENTOS', difficulty: 'FACIL',
+    id: '8', word: 'MAÇÃ', icon: '🍎', category: 'ALIMENTOS', profile: 'TODOS', difficulty: 'FACIL',
     syllables: ['MA', 'ÇÃ'],
     options: {
       FACIL: ['MA', 'ÇÃ', 'PA'],
@@ -100,7 +108,7 @@ export const WORDS_DATA: WordItem[] = [
     }
   },
   { 
-    id: '9', word: 'LEITE', icon: '🥛', category: 'ALIMENTOS', difficulty: 'FACIL',
+    id: '9', word: 'LEITE', icon: '🥛', category: 'ALIMENTOS', profile: 'TODOS', difficulty: 'FACIL',
     syllables: ['LEI', 'TE'],
     options: {
       FACIL: ['LEI', 'TE', 'PE'],
@@ -109,7 +117,7 @@ export const WORDS_DATA: WordItem[] = [
     }
   },
   { 
-    id: '10', word: 'BOLO', icon: '🎂', category: 'ALIMENTOS', difficulty: 'FACIL',
+    id: '10', word: 'BOLO', icon: '🎂', category: 'ALIMENTOS', profile: 'INFANTIL', difficulty: 'FACIL',
     syllables: ['BO', 'LO'],
     options: {
       FACIL: ['BO', 'LO', 'TO'],
@@ -118,9 +126,9 @@ export const WORDS_DATA: WordItem[] = [
     }
   },
 
-  // ==================== ANIMAIS ====================
+  // ==================== ANIMAIS (INFANTIL) ====================
   { 
-    id: '11', word: 'PITOCO', icon: '🐶', category: 'ANIMAIS', difficulty: 'MEDIO',
+    id: '11', word: 'PITOCO', icon: '🐶', category: 'ANIMAIS', profile: 'INFANTIL', difficulty: 'MEDIO',
     syllables: ['PI', 'TO', 'CO'],
     options: {
       FACIL: ['PI', 'TO', 'CO', 'BA'],
@@ -129,7 +137,7 @@ export const WORDS_DATA: WordItem[] = [
     }
   },
   { 
-    id: '12', word: 'NINA', icon: '🐱', category: 'ANIMAIS', difficulty: 'FACIL',
+    id: '12', word: 'NINA', icon: '🐱', category: 'ANIMAIS', profile: 'INFANTIL', difficulty: 'FACIL',
     syllables: ['NI', 'NA'],
     options: {
       FACIL: ['NI', 'NA', 'MI'],
@@ -138,7 +146,7 @@ export const WORDS_DATA: WordItem[] = [
     }
   },
   { 
-    id: '13', word: 'GATO', icon: '🐈', category: 'ANIMAIS', difficulty: 'FACIL',
+    id: '13', word: 'GATO', icon: '🐈', category: 'ANIMAIS', profile: 'INFANTIL', difficulty: 'FACIL',
     syllables: ['GA', 'TO'],
     options: {
       FACIL: ['GA', 'TO', 'PA'],
@@ -147,7 +155,7 @@ export const WORDS_DATA: WordItem[] = [
     }
   },
   { 
-    id: '14', word: 'SAPO', icon: '🐸', category: 'ANIMAIS', difficulty: 'FACIL',
+    id: '14', word: 'SAPO', icon: '🐸', category: 'ANIMAIS', profile: 'INFANTIL', difficulty: 'FACIL',
     syllables: ['SA', 'PO'],
     options: {
       FACIL: ['SA', 'PO', 'LA'],
@@ -156,7 +164,7 @@ export const WORDS_DATA: WordItem[] = [
     }
   },
   { 
-    id: '15', word: 'PEIXE', icon: '🐟', category: 'ANIMAIS', difficulty: 'MEDIO',
+    id: '15', word: 'PEIXE', icon: '🐟', category: 'ANIMAIS', profile: 'INFANTIL', difficulty: 'MEDIO',
     syllables: ['PEI', 'XE'],
     options: {
       FACIL: ['PEI', 'XE', 'TEI'],
@@ -165,7 +173,7 @@ export const WORDS_DATA: WordItem[] = [
     }
   },
   { 
-    id: '16', word: 'PATO', icon: '🦆', category: 'ANIMAIS', difficulty: 'FACIL',
+    id: '16', word: 'PATO', icon: '🦆', category: 'ANIMAIS', profile: 'INFANTIL', difficulty: 'FACIL',
     syllables: ['PA', 'TO'],
     options: {
       FACIL: ['PA', 'TO', 'MA'],
@@ -173,158 +181,10 @@ export const WORDS_DATA: WordItem[] = [
       DIFICIL: ['PA', 'TO', 'MA', 'SO', 'BA', 'CO']
     }
   },
-  { 
-    id: '17', word: 'LEÃO', icon: '🦁', category: 'ANIMAIS', difficulty: 'FACIL',
-    syllables: ['LE', 'ÃO'],
-    options: {
-      FACIL: ['LE', 'ÃO', 'ME'],
-      MEDIO: ['LE', 'ÃO', 'ME', 'CÃO'],
-      DIFICIL: ['LE', 'ÃO', 'ME', 'CÃO', 'PÃO', 'TE']
-    }
-  },
-  { 
-    id: '18', word: 'VACA', icon: '🐮', category: 'ANIMAIS', difficulty: 'FACIL',
-    syllables: ['VA', 'CA'],
-    options: {
-      FACIL: ['VA', 'CA', 'MA'],
-      MEDIO: ['VA', 'CA', 'MA', 'FA'],
-      DIFICIL: ['VA', 'CA', 'MA', 'FA', 'LA', 'DA']
-    }
-  },
-  { 
-    id: '19', word: 'BORBOLETA', icon: '🦋', category: 'ANIMAIS', difficulty: 'DIFICIL',
-    syllables: ['BOR', 'BO', 'LE', 'TA'],
-    options: {
-      FACIL: ['BOR', 'BO', 'LE', 'TA', 'BA'],
-      MEDIO: ['BOR', 'BO', 'LE', 'TA', 'BA', 'TE'],
-      DIFICIL: ['BOR', 'BO', 'LE', 'TA', 'BA', 'TE', 'LAR', 'PA']
-    }
-  },
-  { 
-    id: '20', word: 'TARTARUGA', icon: '🐢', category: 'ANIMAIS', difficulty: 'DIFICIL',
-    syllables: ['TAR', 'TA', 'RU', 'GA'],
-    options: {
-      FACIL: ['TAR', 'TA', 'RU', 'GA', 'MAR'],
-      MEDIO: ['TAR', 'TA', 'RU', 'GA', 'MAR', 'LA'],
-      DIFICIL: ['TAR', 'TA', 'RU', 'GA', 'MAR', 'LA', 'GU', 'RA']
-    }
-  },
 
-  // ==================== OBJETOS ====================
+  // ==================== CORES & BRINQUEDOS (INFANTIL) ====================
   { 
-    id: '21', word: 'TELEVISÃO', icon: '📺', category: 'OBJETOS', difficulty: 'DIFICIL',
-    syllables: ['TE', 'LE', 'VI', 'SÃO'],
-    options: {
-      FACIL: ['TE', 'LE', 'VI', 'SÃO', 'SO'],
-      MEDIO: ['TE', 'LE', 'VI', 'SÃO', 'SO', 'CA'],
-      DIFICIL: ['TE', 'LE', 'VI', 'SÃO', 'SO', 'CA', 'MA', 'LÃO']
-    }
-  },
-  { 
-    id: '22', word: 'CELULAR', icon: '📱', category: 'OBJETOS', difficulty: 'MEDIO',
-    syllables: ['CE', 'LU', 'LAR'],
-    options: {
-      FACIL: ['CE', 'LU', 'LAR', 'RA'],
-      MEDIO: ['CE', 'LU', 'LAR', 'RA', 'BO'],
-      DIFICIL: ['CE', 'LU', 'LAR', 'RA', 'BO', 'SE', 'MAR']
-    }
-  },
-  { 
-    id: '23', word: 'BOLA', icon: '⚽', category: 'OBJETOS', difficulty: 'FACIL',
-    syllables: ['BO', 'LA'],
-    options: {
-      FACIL: ['BO', 'LA', 'CO'],
-      MEDIO: ['BO', 'LA', 'CO', 'SA'],
-      DIFICIL: ['BO', 'LA', 'CO', 'SA', 'MA', 'TA']
-    }
-  },
-  { 
-    id: '24', word: 'CASA', icon: '🏠', category: 'OBJETOS', difficulty: 'FACIL',
-    syllables: ['CA', 'SA'],
-    options: {
-      FACIL: ['CA', 'SA', 'MA'],
-      MEDIO: ['CA', 'SA', 'MA', 'PA'],
-      DIFICIL: ['CA', 'SA', 'MA', 'PA', 'LA', 'RA']
-    }
-  },
-  { 
-    id: '25', word: 'LIVRO', icon: '📖', category: 'OBJETOS', difficulty: 'MEDIO',
-    syllables: ['LI', 'VRO'],
-    options: {
-      FACIL: ['LI', 'VRO', 'VI'],
-      MEDIO: ['LI', 'VRO', 'VI', 'BRO'],
-      DIFICIL: ['LI', 'VRO', 'VI', 'BRO', 'MI', 'CRO']
-    }
-  },
-  { 
-    id: '26', word: 'CARRO', icon: '🚗', category: 'OBJETOS', difficulty: 'MEDIO',
-    syllables: ['CAR', 'RO'],
-    options: {
-      FACIL: ['CAR', 'RO', 'BAR'],
-      MEDIO: ['CAR', 'RO', 'BAR', 'TO'],
-      DIFICIL: ['CAR', 'RO', 'BAR', 'TO', 'MAR', 'SO']
-    }
-  },
-  { 
-    id: '27', word: 'COMPUTADOR', icon: '💻', category: 'OBJETOS', difficulty: 'DIFICIL',
-    syllables: ['COM', 'PU', 'TA', 'DOR'],
-    options: {
-      FACIL: ['COM', 'PU', 'TA', 'DOR', 'TE'],
-      MEDIO: ['COM', 'PU', 'TA', 'DOR', 'TE', 'BO'],
-      DIFICIL: ['COM', 'PU', 'TA', 'DOR', 'TE', 'BO', 'MAR', 'DO']
-    }
-  },
-
-  // ==================== NATUREZA ====================
-  { 
-    id: '28', word: 'SOL', icon: '☀️', category: 'NATUREZA', difficulty: 'FACIL',
-    syllables: ['SOL'],
-    options: {
-      FACIL: ['SOL', 'SAL'],
-      MEDIO: ['SOL', 'SAL', 'GOL', 'LUA'],
-      DIFICIL: ['SOL', 'SAL', 'GOL', 'LUA', 'MEL', 'MAR']
-    }
-  },
-  { 
-    id: '29', word: 'LUA', icon: '🌙', category: 'NATUREZA', difficulty: 'FACIL',
-    syllables: ['LU', 'A'],
-    options: {
-      FACIL: ['LU', 'A', 'RU'],
-      MEDIO: ['LU', 'A', 'RU', 'O'],
-      DIFICIL: ['LU', 'A', 'RU', 'O', 'MU', 'E']
-    }
-  },
-  { 
-    id: '30', word: 'FLOR', icon: '🌸', category: 'NATUREZA', difficulty: 'FACIL',
-    syllables: ['FLOR'],
-    options: {
-      FACIL: ['FLOR', 'DOR'],
-      MEDIO: ['FLOR', 'DOR', 'COR', 'MAR'],
-      DIFICIL: ['FLOR', 'DOR', 'COR', 'MAR', 'AMOR', 'LUZ']
-    }
-  },
-  { 
-    id: '31', word: 'ÁRVORE', icon: '🌳', category: 'NATUREZA', difficulty: 'MEDIO',
-    syllables: ['ÁR', 'VO', 'RE'],
-    options: {
-      FACIL: ['ÁR', 'VO', 'RE', 'AL'],
-      MEDIO: ['ÁR', 'VO', 'RE', 'AL', 'VE'],
-      DIFICIL: ['ÁR', 'VO', 'RE', 'AL', 'VE', 'MAR', 'TE']
-    }
-  },
-  { 
-    id: '32', word: 'ESTRELA', icon: '⭐', category: 'NATUREZA', difficulty: 'MEDIO',
-    syllables: ['ES', 'TRE', 'LA'],
-    options: {
-      FACIL: ['ES', 'TRE', 'LA', 'AS'],
-      MEDIO: ['ES', 'TRE', 'LA', 'AS', 'PRE'],
-      DIFICIL: ['ES', 'TRE', 'LA', 'AS', 'PRE', 'MA', 'TRA']
-    }
-  },
-
-  // ==================== CORES ====================
-  { 
-    id: '33', word: 'AZUL', icon: '🔷', category: 'CORES', difficulty: 'FACIL',
+    id: '17', word: 'AZUL', icon: '🔷', category: 'CORES', profile: 'TODOS', difficulty: 'FACIL',
     syllables: ['A', 'ZUL'],
     options: {
       FACIL: ['A', 'ZUL', 'SUL'],
@@ -333,7 +193,7 @@ export const WORDS_DATA: WordItem[] = [
     }
   },
   { 
-    id: '34', word: 'VERDE', icon: '🟩', category: 'CORES', difficulty: 'FACIL',
+    id: '18', word: 'VERDE', icon: '🟩', category: 'CORES', profile: 'TODOS', difficulty: 'FACIL',
     syllables: ['VER', 'DE'],
     options: {
       FACIL: ['VER', 'DE', 'TER'],
@@ -342,27 +202,7 @@ export const WORDS_DATA: WordItem[] = [
     }
   },
   { 
-    id: '35', word: 'AMARELO', icon: '🟨', category: 'CORES', difficulty: 'MEDIO',
-    syllables: ['A', 'MA', 'RE', 'LO'],
-    options: {
-      FACIL: ['A', 'MA', 'RE', 'LO', 'LA'],
-      MEDIO: ['A', 'MA', 'RE', 'LO', 'LA', 'RO'],
-      DIFICIL: ['A', 'MA', 'RE', 'LO', 'LA', 'RO', 'ME', 'BA']
-    }
-  },
-  { 
-    id: '36', word: 'VERMELHO', icon: '🟥', category: 'CORES', difficulty: 'DIFICIL',
-    syllables: ['VER', 'ME', 'LHO'],
-    options: {
-      FACIL: ['VER', 'ME', 'LHO', 'TER'],
-      MEDIO: ['VER', 'ME', 'LHO', 'TER', 'LHO', 'BE'],
-      DIFICIL: ['VER', 'ME', 'LHO', 'TER', 'LHO', 'BE', 'SER', 'LHA']
-    }
-  },
-
-  // ==================== BRINQUEDOS ====================
-  { 
-    id: '37', word: 'URSO', icon: '🧸', category: 'BRINQUEDOS', difficulty: 'FACIL',
+    id: '19', word: 'URSO', icon: '🧸', category: 'BRINQUEDOS', profile: 'INFANTIL', difficulty: 'FACIL',
     syllables: ['UR', 'SO'],
     options: {
       FACIL: ['UR', 'SO', 'AR'],
@@ -371,25 +211,7 @@ export const WORDS_DATA: WordItem[] = [
     }
   },
   { 
-    id: '38', word: 'PIPA', icon: '🪁', category: 'BRINQUEDOS', difficulty: 'FACIL',
-    syllables: ['PI', 'PA'],
-    options: {
-      FACIL: ['PI', 'PA', 'BI'],
-      MEDIO: ['PI', 'PA', 'BI', 'BA'],
-      DIFICIL: ['PI', 'PA', 'BI', 'BA', 'TI', 'MA']
-    }
-  },
-  { 
-    id: '39', word: 'BONECA', icon: '🪆', category: 'BRINQUEDOS', difficulty: 'MEDIO',
-    syllables: ['BO', 'NE', 'CA'],
-    options: {
-      FACIL: ['BO', 'NE', 'CA', 'ME'],
-      MEDIO: ['BO', 'NE', 'CA', 'ME', 'LA'],
-      DIFICIL: ['BO', 'NE', 'CA', 'ME', 'LA', 'PO', 'DA']
-    }
-  },
-  { 
-    id: '40', word: 'ROBÔ', icon: '🤖', category: 'BRINQUEDOS', difficulty: 'FACIL',
+    id: '20', word: 'ROBÔ', icon: '🤖', category: 'BRINQUEDOS', profile: 'INFANTIL', difficulty: 'FACIL',
     syllables: ['RO', 'BÔ'],
     options: {
       FACIL: ['RO', 'BÔ', 'PO'],
@@ -398,79 +220,155 @@ export const WORDS_DATA: WordItem[] = [
     }
   },
 
-  // ==================== CORPO HUMANO ====================
+  // ==================== MODO EJA: TRABALHO & COTIDIANO ====================
   { 
-    id: '41', word: 'BOCA', icon: '👄', category: 'CORPO', difficulty: 'FACIL',
-    syllables: ['BO', 'CA'],
+    id: '21', word: 'TRABALHO', icon: '💼', category: 'TRABALHO', profile: 'EJA', difficulty: 'MEDIO',
+    syllables: ['TRA', 'BA', 'LHO'],
     options: {
-      FACIL: ['BO', 'CA', 'CO'],
-      MEDIO: ['BO', 'CA', 'CO', 'BA'],
-      DIFICIL: ['BO', 'CA', 'CO', 'BA', 'PO', 'DA']
+      FACIL: ['TRA', 'BA', 'LHO', 'PRA'],
+      MEDIO: ['TRA', 'BA', 'LHO', 'PRA', 'LHA'],
+      DIFICIL: ['TRA', 'BA', 'LHO', 'PRA', 'LHA', 'GRA', 'LHO']
     }
   },
   { 
-    id: '42', word: 'NARIZ', icon: '👃', category: 'CORPO', difficulty: 'MEDIO',
-    syllables: ['NA', 'RIZ'],
+    id: '22', word: 'SALÁRIO', icon: '💵', category: 'TRABALHO', profile: 'EJA', difficulty: 'MEDIO',
+    syllables: ['SA', 'LÁ', 'RIO'],
     options: {
-      FACIL: ['NA', 'RIZ', 'RA'],
-      MEDIO: ['NA', 'RIZ', 'RA', 'LUZ'],
-      DIFICIL: ['NA', 'RIZ', 'RA', 'LUZ', 'MA', 'PAZ']
+      FACIL: ['SA', 'LÁ', 'RIO', 'RA'],
+      MEDIO: ['SA', 'LÁ', 'RIO', 'RA', 'LIO'],
+      DIFICIL: ['SA', 'LÁ', 'RIO', 'RA', 'LIO', 'MA', 'RUA']
     }
   },
   { 
-    id: '43', word: 'OLHO', icon: '👁️', category: 'CORPO', difficulty: 'MEDIO',
-    syllables: ['O', 'LHO'],
+    id: '23', word: 'OBRA', icon: '🧱', category: 'TRABALHO', profile: 'EJA', difficulty: 'FACIL',
+    syllables: ['O', 'BRA'],
     options: {
-      FACIL: ['O', 'LHO', 'A'],
-      MEDIO: ['O', 'LHO', 'A', 'LHA'],
-      DIFICIL: ['O', 'LHO', 'A', 'LHA', 'E', 'LHE']
+      FACIL: ['O', 'BRA', 'PRA'],
+      MEDIO: ['O', 'BRA', 'PRA', 'A'],
+      DIFICIL: ['O', 'BRA', 'PRA', 'A', 'GRA', 'E']
     }
   },
   { 
-    id: '44', word: 'CABEÇA', icon: '🧒', category: 'CORPO', difficulty: 'MEDIO',
-    syllables: ['CA', 'BE', 'ÇA'],
+    id: '24', word: 'CONTRATO', icon: '📄', category: 'TRABALHO', profile: 'EJA', difficulty: 'DIFICIL',
+    syllables: ['CON', 'TRA', 'TO'],
     options: {
-      FACIL: ['CA', 'BE', 'ÇA', 'BA'],
-      MEDIO: ['CA', 'BE', 'ÇA', 'BA', 'SA'],
-      DIFICIL: ['CA', 'BE', 'ÇA', 'BA', 'SA', 'MA', 'PA']
+      FACIL: ['CON', 'TRA', 'TO', 'BON'],
+      MEDIO: ['CON', 'TRA', 'TO', 'BON', 'PRA'],
+      DIFICIL: ['CON', 'TRA', 'TO', 'BON', 'PRA', 'RO', 'MON']
     }
   },
 
-  // ==================== PROFISSÕES ====================
+  // ==================== MODO EJA: SAÚDE & CUIDADOS ====================
   { 
-    id: '45', word: 'MÉDICO', icon: '👨‍⚕️', category: 'PROFISSÕES', difficulty: 'MEDIO',
-    syllables: ['MÉ', 'DI', 'CO'],
+    id: '25', word: 'SAÚDE', icon: '🩺', category: 'SAÚDE', profile: 'EJA', difficulty: 'FACIL',
+    syllables: ['SA', 'Ú', 'DE'],
     options: {
-      FACIL: ['MÉ', 'DI', 'CO', 'MI'],
-      MEDIO: ['MÉ', 'DI', 'CO', 'MI', 'CA'],
-      DIFICIL: ['MÉ', 'DI', 'CO', 'MI', 'CA', 'DE', 'LO']
+      FACIL: ['SA', 'Ú', 'DE', 'DA'],
+      MEDIO: ['SA', 'Ú', 'DE', 'DA', 'I'],
+      DIFICIL: ['SA', 'Ú', 'DE', 'DA', 'I', 'LA', 'TE']
     }
   },
   { 
-    id: '46', word: 'BOMBEIRO', icon: '👨‍🚒', category: 'PROFISSÕES', difficulty: 'DIFICIL',
-    syllables: ['BOM', 'BEI', 'RO'],
+    id: '26', word: 'REMÉDIO', icon: '💊', category: 'SAÚDE', profile: 'EJA', difficulty: 'MEDIO',
+    syllables: ['RE', 'MÉ', 'DIO'],
     options: {
-      FACIL: ['BOM', 'BEI', 'RO', 'SOM'],
-      MEDIO: ['BOM', 'BEI', 'RO', 'SOM', 'TO'],
-      DIFICIL: ['BOM', 'BEI', 'RO', 'SOM', 'TO', 'LEI', 'BAR']
+      FACIL: ['RE', 'MÉ', 'DIO', 'DE'],
+      MEDIO: ['RE', 'MÉ', 'DIO', 'DE', 'ME'],
+      DIFICIL: ['RE', 'MÉ', 'DIO', 'DE', 'ME', 'RIO', 'LE']
     }
   },
   { 
-    id: '47', word: 'PROFESSOR', icon: '👨‍🏫', category: 'PROFISSÕES', difficulty: 'DIFICIL',
-    syllables: ['PRO', 'FES', 'SOR'],
+    id: '27', word: 'POSTO', icon: '🏥', category: 'SAÚDE', profile: 'EJA', difficulty: 'FACIL',
+    syllables: ['POS', 'TO'],
     options: {
-      FACIL: ['PRO', 'FES', 'SOR', 'PO'],
-      MEDIO: ['PRO', 'FES', 'SOR', 'PO', 'TOR'],
-      DIFICIL: ['PRO', 'FES', 'SOR', 'PO', 'TOR', 'PRE', 'MES']
+      FACIL: ['POS', 'TO', 'MOS'],
+      MEDIO: ['POS', 'TO', 'MOS', 'TA'],
+      DIFICIL: ['POS', 'TO', 'MOS', 'TA', 'TOS', 'PA']
     }
   },
   { 
-    id: '48', word: 'POLÍCIA', icon: '👮', category: 'PROFISSÕES', difficulty: 'DIFICIL',
-    syllables: ['PO', 'LÍ', 'CIA'],
+    id: '28', word: 'RECEITA', icon: '📝', category: 'SAÚDE', profile: 'EJA', difficulty: 'MEDIO',
+    syllables: ['RE', 'CEI', 'TA'],
     options: {
-      FACIL: ['PO', 'LÍ', 'CIA', 'BO'],
-      MEDIO: ['PO', 'LÍ', 'CIA', 'BO', 'DA'],
-      DIFICIL: ['PO', 'LÍ', 'CIA', 'BO', 'DA', 'SI', 'MA']
+      FACIL: ['RE', 'CEI', 'TA', 'SEI'],
+      MEDIO: ['RE', 'CEI', 'TA', 'SEI', 'TE'],
+      DIFICIL: ['RE', 'CEI', 'TA', 'SEI', 'TE', 'LEI', 'RA']
+    }
+  },
+
+  // ==================== MODO EJA: CIDADE & TRANSPORTE ====================
+  { 
+    id: '29', word: 'ÔNIBUS', icon: '🚌', category: 'CIDADE', profile: 'EJA', difficulty: 'MEDIO',
+    syllables: ['Ô', 'NI', 'BUS'],
+    options: {
+      FACIL: ['Ô', 'NI', 'BUS', 'A'],
+      MEDIO: ['Ô', 'NI', 'BUS', 'A', 'LI'],
+      DIFICIL: ['Ô', 'NI', 'BUS', 'A', 'LI', 'MUS', 'E']
+    }
+  },
+  { 
+    id: '30', word: 'METRÔ', icon: '🚇', category: 'CIDADE', profile: 'EJA', difficulty: 'FACIL',
+    syllables: ['ME', 'TRÔ'],
+    options: {
+      FACIL: ['ME', 'TRÔ', 'PRÔ'],
+      MEDIO: ['ME', 'TRÔ', 'PRÔ', 'NE'],
+      DIFICIL: ['ME', 'TRÔ', 'PRÔ', 'NE', 'TRO', 'TE']
+    }
+  },
+  { 
+    id: '31', word: 'RUA', icon: '🛣️', category: 'CIDADE', profile: 'TODOS', difficulty: 'FACIL',
+    syllables: ['RU', 'A'],
+    options: {
+      FACIL: ['RU', 'A', 'LU'],
+      MEDIO: ['RU', 'A', 'LU', 'O'],
+      DIFICIL: ['RU', 'A', 'LU', 'O', 'MU', 'E']
+    }
+  },
+  { 
+    id: '32', word: 'MERCADO', icon: '🛒', category: 'CIDADE', profile: 'EJA', difficulty: 'MEDIO',
+    syllables: ['MER', 'CA', 'DO'],
+    options: {
+      FACIL: ['MER', 'CA', 'DO', 'TER'],
+      MEDIO: ['MER', 'CA', 'DO', 'TER', 'DA'],
+      DIFICIL: ['MER', 'CA', 'DO', 'TER', 'DA', 'SER', 'DE']
+    }
+  },
+
+  // ==================== MODO EJA: DOCUMENTOS & CIDADANIA ====================
+  { 
+    id: '33', word: 'BANCO', icon: '🏦', category: 'DOCUMENTOS', profile: 'EJA', difficulty: 'FACIL',
+    syllables: ['BAN', 'CO'],
+    options: {
+      FACIL: ['BAN', 'CO', 'MAN'],
+      MEDIO: ['BAN', 'CO', 'MAN', 'CA'],
+      DIFICIL: ['BAN', 'CO', 'MAN', 'CA', 'TAN', 'BO']
+    }
+  },
+  { 
+    id: '34', word: 'CONTA', icon: '🧾', category: 'DOCUMENTOS', profile: 'EJA', difficulty: 'FACIL',
+    syllables: ['CON', 'TA'],
+    options: {
+      FACIL: ['CON', 'TA', 'PON'],
+      MEDIO: ['CON', 'TA', 'PON', 'TE'],
+      DIFICIL: ['CON', 'TA', 'PON', 'TE', 'MON', 'TO']
+    }
+  },
+  { 
+    id: '35', word: 'CARTÃO', icon: '💳', category: 'DOCUMENTOS', profile: 'EJA', difficulty: 'MEDIO',
+    syllables: ['CAR', 'TÃO'],
+    options: {
+      FACIL: ['CAR', 'TÃO', 'BAR'],
+      MEDIO: ['CAR', 'TÃO', 'BAR', 'PÃO'],
+      DIFICIL: ['CAR', 'TÃO', 'BAR', 'PÃO', 'TAR', 'LÃO']
+    }
+  },
+  { 
+    id: '36', word: 'VOTO', icon: '🗳️', category: 'DOCUMENTOS', profile: 'EJA', difficulty: 'FACIL',
+    syllables: ['VO', 'TO'],
+    options: {
+      FACIL: ['VO', 'TO', 'PO'],
+      MEDIO: ['VO', 'TO', 'PO', 'TA'],
+      DIFICIL: ['VO', 'TO', 'PO', 'TA', 'BO', 'TE']
     }
   }
 ];

@@ -50,4 +50,13 @@ Registro das decisões arquiteturais e escolhas técnicas do projeto (ADRs).
 - **Status:** Aceito
 - **Data:** 2026-11-09
 - **Contexto:** Fortalecer a consciência fonológica da criança associando cada letra individualmente antes da formação silábica completa.
-- **Decisão:** Criação do componente isolado `src/components/SpellingMinigame.tsx` com slots de letras, embaralhamento procedural com distratores, validação tátil, feedback por voz de cada letra e recompensas de XP (+35 XP) e Esmeraldas.
+- **Decisão:** Criação do componente isolado `src/components/SpellingMinigame.tsx`.
+
+## [ADR-009] Integração Científica: Modo EJA (Adultos), Treino Fônico (GraphoGame) & Trilha do Conhecimento
+- **Status:** Aceito
+- **Data:** 2026-11-09
+- **Contexto:** Incorporação das melhores práticas das neurociências da leitura (InsCer/PUCRS, MEC) e letramento de adultos (Paulo Freire / EJA).
+- **Decisão:**
+  1. **Modo Duplo de Perfil:** `Infantil Craft` (lúdico) vs `Adultos (EJA)` com vocabulário digno de Trabalho, Saúde, Cidade e Documentos.
+  2. **Treinador Fônico:** Componente `src/components/PhonicsTrainerModal.tsx` treinando o discernimento auditivo entre fonema falado e grafema correspondente.
+  3. **Trilha Pedagógica em Fases (Níveis 1 ao 10):** Componente `src/components/LearningTrailModal.tsx` com progressão por famílias silábicas.
